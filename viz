@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import kubernetes
+
+# load credentials etc. from ~/.kube/config
+kubernetes.config.load_kube_config()
+
+v1 = kubernetes.client.CoreV1Api()
+
+#print v1.get_api_resources()
+
+r = v1.list_pod_for_all_namespaces(watch=False)
+
+print 'digraph X {'
+print '  rankdir=LR;'
+
+for i in r.items:
+  pod_name = i.metadata.namespace + '/' + i.metadata.name
+  print '  "%s" [label="%s"];' % (pod_name, pod_name)
+  for c in i.spec.containers:
+    c_id = pod_name + c.image
+    c_label = c.image[-20:]
+    print '  "%s" [label="%s", shape="box"];' % (c_id, c_label)
+    print ' "%s" -> "%s";' % (pod_name, c_id) 
+
+print '}'
+
